@@ -72,14 +72,27 @@ XXX Possible additions:
 
 """
 
-import sys, os
+import os
+import sys
 from types import GenericAlias
 
-__all__ = ["input", "close", "nextfile", "filename", "lineno", "filelineno",
-           "fileno", "isfirstline", "isstdin", "FileInput", "hook_compressed",
-           "hook_encoded"]
+__all__ = [
+    "input",
+    "close",
+    "nextfile",
+    "filename",
+    "lineno",
+    "filelineno",
+    "fileno",
+    "isfirstline",
+    "isstdin",
+    "FileInput",
+    "hook_compressed",
+    "hook_encoded",
+]
 
 _state = None
+
 
 def input(files=None, inplace=False, backup="", *, mode="r", openhook=None):
     """Return an instance of the FileInput class, which can be iterated.
@@ -94,6 +107,7 @@ def input(files=None, inplace=False, backup="", *, mode="r", openhook=None):
     _state = FileInput(files, inplace, backup, mode=mode, openhook=openhook)
     return _state
 
+
 def close():
     """Close the sequence."""
     global _state
@@ -101,6 +115,7 @@ def close():
     _state = None
     if state:
         state.close()
+
 
 def nextfile():
     """
@@ -116,6 +131,7 @@ def nextfile():
         raise RuntimeError("no active input()")
     return _state.nextfile()
 
+
 def filename():
     """
     Return the name of the file currently being read.
@@ -124,6 +140,7 @@ def filename():
     if not _state:
         raise RuntimeError("no active input()")
     return _state.filename()
+
 
 def lineno():
     """
@@ -135,6 +152,7 @@ def lineno():
         raise RuntimeError("no active input()")
     return _state.lineno()
 
+
 def filelineno():
     """
     Return the line number in the current file. Before the first line
@@ -145,6 +163,7 @@ def filelineno():
         raise RuntimeError("no active input()")
     return _state.filelineno()
 
+
 def fileno():
     """
     Return the file number of the current file. When no file is currently
@@ -153,6 +172,7 @@ def fileno():
     if not _state:
         raise RuntimeError("no active input()")
     return _state.fileno()
+
 
 def isfirstline():
     """
@@ -163,6 +183,7 @@ def isfirstline():
         raise RuntimeError("no active input()")
     return _state.isfirstline()
 
+
 def isstdin():
     """
     Returns true if the last line was read from sys.stdin,
@@ -171,6 +192,7 @@ def isstdin():
     if not _state:
         raise RuntimeError("no active input()")
     return _state.isstdin()
+
 
 class FileInput:
     """FileInput([files[, inplace[, backup]]], *, mode=None, openhook=None)
@@ -185,12 +207,11 @@ class FileInput:
     sequential order; random access and readline() cannot be mixed.
     """
 
-    def __init__(self, files=None, inplace=False, backup="", *,
-                 mode="r", openhook=None):
+    def __init__(self, files=None, inplace=False, backup="", *, mode="r", openhook=None):
         if isinstance(files, str):
             files = (files,)
         elif isinstance(files, os.PathLike):
-            files = (os.fspath(files), )
+            files = (os.fspath(files),)
         else:
             if files is None:
                 files = sys.argv[1:]
@@ -211,12 +232,11 @@ class FileInput:
         self._backupfilename = None
         # restrict mode argument to reading modes
         if mode not in ('r', 'rU', 'U', 'rb'):
-            raise ValueError("FileInput opening mode must be one of "
-                             "'r', 'rU', 'U' and 'rb'")
+            raise ValueError("FileInput opening mode must be one of " "'r', 'rU', 'U' and 'rb'")
         if 'U' in mode:
             import warnings
-            warnings.warn("'U' mode is deprecated",
-                          DeprecationWarning, 2)
+
+            warnings.warn("'U' mode is deprecated", DeprecationWarning, 2)
         self._mode = mode
         self._write_mode = mode.replace('r', 'w') if 'U' not in mode else 'w'
         if openhook:
@@ -257,11 +277,12 @@ class FileInput:
 
     def __getitem__(self, i):
         import warnings
+
         warnings.warn(
             "Support for indexing FileInput objects is deprecated. "
             "Use iterator protocol instead.",
             DeprecationWarning,
-            stacklevel=2
+            stacklevel=2,
         )
         if i != self.lineno():
             raise RuntimeError("accessing lines out of order")
@@ -295,8 +316,10 @@ class FileInput:
                 backupfilename = self._backupfilename
                 self._backupfilename = None
                 if backupfilename and not self._backup:
-                    try: os.unlink(backupfilename)
-                    except OSError: pass
+                    try:
+                        os.unlink(backupfilename)
+                    except OSError:
+                        pass
 
                 self._isstdin = False
 
@@ -333,8 +356,7 @@ class FileInput:
             self._isstdin = True
         else:
             if self._inplace:
-                self._backupfilename = (
-                    os.fspath(self._filename) + (self._backup or ".bak"))
+                self._backupfilename = os.fspath(self._filename) + (self._backup or ".bak")
                 try:
                     os.unlink(self._backupfilename)
                 except OSError:
@@ -399,10 +421,8 @@ def hook_compressed(filename, mode):
     ext = os.path.splitext(filename)[1]
     if ext == '.gz':
         import gzip
+
         return gzip.open(filename, mode)
-    elif ext == '.bz2':
-        import bz2
-        return bz2.BZ2File(filename, mode)
     else:
         return open(filename, mode)
 
@@ -410,23 +430,32 @@ def hook_compressed(filename, mode):
 def hook_encoded(encoding, errors=None):
     def openhook(filename, mode):
         return open(filename, mode, encoding=encoding, errors=errors)
+
     return openhook
 
 
 def _test():
     import getopt
+
     inplace = False
     backup = False
     opts, args = getopt.getopt(sys.argv[1:], "ib:")
     for o, a in opts:
-        if o == '-i': inplace = True
-        if o == '-b': backup = a
+        if o == '-i':
+            inplace = True
+        if o == '-b':
+            backup = a
     for line in input(args, inplace=inplace, backup=backup):
-        if line[-1:] == '\n': line = line[:-1]
-        if line[-1:] == '\r': line = line[:-1]
-        print("%d: %s[%d]%s %s" % (lineno(), filename(), filelineno(),
-                                   isfirstline() and "*" or "", line))
+        if line[-1:] == '\n':
+            line = line[:-1]
+        if line[-1:] == '\r':
+            line = line[:-1]
+        print(
+            "%d: %s[%d]%s %s"
+            % (lineno(), filename(), filelineno(), isfirstline() and "*" or "", line)
+        )
     print("%d: %s[%d]" % (lineno(), filename(), filelineno()))
+
 
 if __name__ == '__main__':
     _test()

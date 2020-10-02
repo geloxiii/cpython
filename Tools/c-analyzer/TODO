@@ -953,7 +953,6 @@ Modules/clinic/_asynciomodule.c.h:_asyncio__enter_task():_parser static _PyArg_P
 Modules/clinic/_asynciomodule.c.h:_asyncio__leave_task():_parser static _PyArg_Parser _parser
 Modules/clinic/_asynciomodule.c.h:_asyncio__register_task():_parser static _PyArg_Parser _parser
 Modules/clinic/_asynciomodule.c.h:_asyncio__unregister_task():_parser static _PyArg_Parser _parser
-Modules/clinic/_bz2module.c.h:_bz2_BZ2Decompressor_decompress():_parser static _PyArg_Parser _parser
 Modules/clinic/_codecsmodule.c.h:_codecs_decode():_parser        static _PyArg_Parser _parser
 Modules/clinic/_codecsmodule.c.h:_codecs_encode():_parser        static _PyArg_Parser _parser
 Modules/clinic/_cursesmodule.c.h:_curses_setupterm():_parser     static _PyArg_Parser _parser

@@ -1730,29 +1730,6 @@ class PyBuildExt(build_ext):
             )
         )
 
-        # Gustavo Niemeyer's bz2 module.
-        if self.compiler.find_library_file(self.lib_dirs, 'bz2'):
-            if MACOS:
-                bz2_extra_link_args = ('-Wl,-search_paths_first',)
-            else:
-                bz2_extra_link_args = ()
-            self.add(
-                Extension(
-                    '_bz2',
-                    ['_bz2module.c'],
-                    libraries=['bz2'],
-                    extra_link_args=bz2_extra_link_args,
-                )
-            )
-        else:
-            self.missing.append('_bz2')
-
-        # LZMA compression support.
-        if self.compiler.find_library_file(self.lib_dirs, 'lzma'):
-            self.add(Extension('_lzma', ['_lzmamodule.c'], libraries=['lzma']))
-        else:
-            self.missing.append('_lzma')
-
     def detect_expat_elementtree(self):
         # Interface to the Expat XML parser
         #
