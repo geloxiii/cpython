@@ -19,7 +19,7 @@ All PC ports use this scheme to try to set up a module search path:
   1) The script location; the current directory without script.
   2) The PYTHONPATH variable, if set.
   3) For Win32 platforms (NT/95), paths specified in the Registry.
-  4) Default directories lib, lib/win, lib/test, lib/tkinter;
+  4) Default directories lib, lib/win, lib/test
      these are searched relative to the environment variable
      PYTHONHOME, if set, or relative to the executable and its
      ancestors, if a landmark file (Lib/string.py) is found ,
@@ -37,7 +37,7 @@ For example,
 There are several add-in modules to build Python programs which use
 the native Windows operating environment.  The ports here just make
 "QuickWin" and DOS Python versions which support a character-mode
-(console) environment.  Look in www.python.org for Tkinter, PythonWin,
+(console) environment.  Look in www.python.org for , PythonWin,
 WPY and wxPython.
 
 To make a Python port, start the Integrated Development Environment

@@ -16,22 +16,22 @@ import subprocess
 import sys
 import tempfile
 import zipfile
-
 from pathlib import Path
-
-if __name__ == "__main__":
-    # Started directly, so enable relative imports
-    __path__ = [str(Path(__file__).resolve().parent)]
 
 from .support.appxmanifest import *
 from .support.catalog import *
 from .support.constants import *
 from .support.filesets import *
 from .support.logging import *
+from .support.nuspec import *
 from .support.options import *
 from .support.pip import *
 from .support.props import *
-from .support.nuspec import *
+
+if __name__ == "__main__":
+    # Started directly, so enable relative imports
+    __path__ = [str(Path(__file__).resolve().parent)]
+
 
 BDIST_WININST_FILES_ONLY = FileNameSet("wininst-*", "bdist_wininst.py")
 BDIST_WININST_STUB = "PC/layout/support/distutils.command.bdist_wininst.py"
@@ -41,8 +41,6 @@ TEST_DIRS_ONLY = FileNameSet("test", "tests")
 
 IDLE_DIRS_ONLY = FileNameSet("idlelib")
 
-TCLTK_PYDS_ONLY = FileStemSet("tcl*", "tk*", "_tkinter")
-TCLTK_DIRS_ONLY = FileNameSet("tkinter", "turtledemo")
 TCLTK_FILES_ONLY = FileNameSet("turtle.py")
 
 VENV_DIRS_ONLY = FileNameSet("venv", "ensurepip")
@@ -64,7 +62,7 @@ CDF_FILES = FileSuffixSet(".cdf")
 
 DATA_DIRS = FileNameSet("data")
 
-TOOLS_DIRS = FileNameSet("scripts", "i18n", "pynche", "demo", "parser")
+TOOLS_DIRS = FileNameSet("scripts", "i18n", "demo", "parser")
 TOOLS_FILES = FileSuffixSet(".py", ".pyw", ".txt")
 
 
@@ -75,10 +73,7 @@ def copy_if_modified(src, dest):
         do_copy = True
     else:
         src_stat = os.stat(src)
-        do_copy = (
-            src_stat.st_mtime != dest_stat.st_mtime
-            or src_stat.st_size != dest_stat.st_size
-        )
+        do_copy = src_stat.st_mtime != dest_stat.st_mtime or src_stat.st_size != dest_stat.st_size
 
     if do_copy:
         shutil.copy2(src, dest)
@@ -88,15 +83,6 @@ def get_lib_layout(ns):
     def _c(f):
         if f in EXCLUDE_FROM_LIB:
             return False
-        if f.is_dir():
-            if f in TEST_DIRS_ONLY:
-                return ns.include_tests
-            if f in TCLTK_DIRS_ONLY:
-                return ns.include_tcltk
-            if f in IDLE_DIRS_ONLY:
-                return ns.include_idle
-            if f in VENV_DIRS_ONLY:
-                return ns.include_venv
         else:
             if f in TCLTK_FILES_ONLY:
                 return ns.include_tcltk
@@ -189,8 +175,6 @@ def get_layout(ns):
             continue
         if src in TEST_PYDS_ONLY and not ns.include_tests:
             continue
-        if src in TCLTK_PYDS_ONLY and not ns.include_tcltk:
-            continue
 
         yield from in_build(src.name, dest="" if ns.flat_dlls else "DLLs/")
 
@@ -277,12 +261,7 @@ def _compile_one_py(src, dest, name, optimize, checked=True):
     try:
         return Path(
             py_compile.compile(
-                str(src),
-                dest,
-                str(name),
-                doraise=True,
-                optimize=optimize,
-                invalidation_mode=mode,
+                str(src), dest, str(name), doraise=True, optimize=optimize, invalidation_mode=mode,
             )
         )
     except py_compile.PyCompileError:
@@ -341,9 +320,7 @@ def generate_source_files(ns):
         if zip_path.is_file():
             zip_path.unlink()
         elif zip_path.is_dir():
-            log_error(
-                "Cannot create zip file because a directory exists by the same name"
-            )
+            log_error("Cannot create zip file because a directory exists by the same name")
             return
         log_info("Generating {} in {}", zip_name, ns.temp)
         ns.temp.mkdir(parents=True, exist_ok=True)
@@ -549,14 +526,9 @@ def main():
         type=Path,
         default=None,
     )
+    parser.add_argument("-d", "--debug", help="Include debug build", action="store_true")
     parser.add_argument(
-        "-d", "--debug", help="Include debug build", action="store_true"
-    )
-    parser.add_argument(
-        "-p",
-        "--precompile",
-        help="Include .pyc files instead of .py",
-        action="store_true",
+        "-p", "--precompile", help="Include .pyc files instead of .py", action="store_true",
     )
     parser.add_argument(
         "-z", "--zip-lib", help="Include library in a ZIP file", action="store_true"
@@ -565,10 +537,7 @@ def main():
         "--flat-dlls", help="Does not create a DLLs directory", action="store_true"
     )
     parser.add_argument(
-        "-a",
-        "--include-all",
-        help="Include all optional components",
-        action="store_true",
+        "-a", "--include-all", help="Include all optional components", action="store_true",
     )
     parser.add_argument(
         "--include-cat",

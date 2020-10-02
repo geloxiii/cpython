@@ -19,7 +19,6 @@ OPTIONS = {
     "pip": {"help": "pip"},
     "pip-user": {"help": "pip.ini file for default --user"},
     "distutils": {"help": "distutils"},
-    "tcltk": {"help": "Tcl, Tk and tkinter"},
     "idle": {"help": "Idle"},
     "tests": {"help": "test suite"},
     "tools": {"help": "tools"},
@@ -56,16 +55,7 @@ PRESETS = {
     },
     "nuget": {
         "help": "nuget package",
-        "options": [
-            "dev",
-            "tools",
-            "pip",
-            "stable",
-            "distutils",
-            "venv",
-            "props",
-            "nuspec",
-        ],
+        "options": ["dev", "tools", "pip", "stable", "distutils", "venv", "props", "nuspec",],
     },
     "iot": {"help": "Windows IoT Core", "options": ["stable", "pip"]},
     "default": {

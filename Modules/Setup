@@ -255,23 +255,8 @@ _symtable symtablemodule.c
 # _blake module
 #_blake2 _blake2/blake2module.c _blake2/blake2b_impl.c _blake2/blake2s_impl.c
 
-# The _tkinter module.
-#
-# The command for _tkinter is long and site specific.  Please
-# uncomment and/or edit those parts as indicated.  If you don't have a
-# specific extension (e.g. Tix or BLT), leave the corresponding line
-# commented out.  (Leave the trailing backslashes in!  If you
-# experience strange errors, you may want to join all uncommented
-# lines and remove the backslashes -- the backslash interpretation is
-# done by the shell's "read" command and it may not be implemented on
-# every system.
 
-# *** Always uncomment this (leave the leading underscore in!):
-# _tkinter _tkinter.c tkappinit.c -DWITH_APPINIT \
-# *** Uncomment and edit to reflect where your Tcl/Tk libraries are:
-#	-L/usr/local/lib \
-# *** Uncomment and edit to reflect where your Tcl/Tk headers are:
-#	-I/usr/local/include \
+
 # *** Uncomment and edit to reflect where your X11 header files are:
 #	-I/usr/X11R6/include \
 # *** Or uncomment this for Solaris:
@@ -361,5 +346,4 @@ xxsubtype xxsubtype.c
 #
 #*disabled*
 #
-#_sqlite3 _tkinter _curses pyexpat
 #_codecs_jp _codecs_kr _codecs_tw unicodedata

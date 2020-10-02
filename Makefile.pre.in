@@ -1352,9 +1352,7 @@ maninstall:	altmaninstall
 
 # Install the library
 XMLLIBSUBDIRS=  xml xml/dom xml/etree xml/parsers xml/sax
-LIBSUBDIRS=	tkinter tkinter/test tkinter/test/test_tkinter \
-		tkinter/test/test_ttk site-packages test \
-		test/audiodata \
+LIBSUBDIRS=	test/audiodata \
 		test/capath test/data \
 		test/cjkencodings test/decimaltestdata \
 		test/xmltestdata test/xmltestdata/c14n-20 \
