@@ -970,9 +970,6 @@ class PyBuildExt(build_ext):
         # audioop needs libm for floor() in multiple functions.
         self.add(Extension('audioop', ['audioop.c'], libraries=['m']))
 
-        # CSV files
-        self.add(Extension('_csv', ['_csv.c']))
-
         # POSIX subprocess module helper.
         self.add(Extension('_posixsubprocess', ['_posixsubprocess.c']))
 
