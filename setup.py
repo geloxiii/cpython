@@ -926,20 +926,6 @@ class PyBuildExt(build_ext):
             # May be necessary on AIX for flock function
             libs = ['bsd']
         self.add(Extension('fcntl', ['fcntlmodule.c'], libraries=libs))
-        # pwd(3)
-        self.add(Extension('pwd', ['pwdmodule.c']))
-        # grp(3)
-        if not VXWORKS:
-            self.add(Extension('grp', ['grpmodule.c']))
-        # spwd, shadow passwords
-        if self.config_h_vars.get('HAVE_GETSPNAM', False) or self.config_h_vars.get(
-            'HAVE_GETSPENT', False
-        ):
-            self.add(Extension('spwd', ['spwdmodule.c']))
-        # AIX has shadow passwords, but access is not via getspent(), etc.
-        # module support is not expected so it not 'missing'
-        elif not AIX:
-            self.missing.append('spwd')
 
         # select(2); not on ancient System V
         self.add(Extension('select', ['selectmodule.c']))
@@ -969,9 +955,6 @@ class PyBuildExt(build_ext):
         #
         # audioop needs libm for floor() in multiple functions.
         self.add(Extension('audioop', ['audioop.c'], libraries=['m']))
-
-        # POSIX subprocess module helper.
-        self.add(Extension('_posixsubprocess', ['_posixsubprocess.c']))
 
     def detect_test_extensions(self):
         # Python C API test module
@@ -1439,44 +1422,6 @@ class PyBuildExt(build_ext):
         for loc in ('kr', 'jp', 'cn', 'tw', 'hk', 'iso2022'):
             self.add(Extension('_codecs_%s' % loc, ['cjkcodecs/_codecs_%s.c' % loc]))
 
-    def detect_multiprocessing(self):
-        # Richard Oudkerk's multiprocessing module
-        if MS_WINDOWS:
-            multiprocessing_srcs = [
-                '_multiprocessing/multiprocessing.c',
-                '_multiprocessing/semaphore.c',
-            ]
-
-        else:
-            multiprocessing_srcs = ['_multiprocessing/multiprocessing.c']
-            if sysconfig.get_config_var('HAVE_SEM_OPEN') and not sysconfig.get_config_var(
-                'POSIX_SEMAPHORES_NOT_ENABLED'
-            ):
-                multiprocessing_srcs.append('_multiprocessing/semaphore.c')
-            if sysconfig.get_config_var('HAVE_SHM_OPEN') and sysconfig.get_config_var(
-                'HAVE_SHM_UNLINK'
-            ):
-                posixshmem_srcs = ['_multiprocessing/posixshmem.c']
-                libs = []
-                if sysconfig.get_config_var('SHM_NEEDS_LIBRT'):
-                    # need to link with librt to get shm_open()
-                    libs.append('rt')
-                self.add(
-                    Extension(
-                        '_posixshmem',
-                        posixshmem_srcs,
-                        define_macros={},
-                        libraries=libs,
-                        include_dirs=["Modules/_multiprocessing"],
-                    )
-                )
-
-        self.add(
-            Extension(
-                '_multiprocessing', multiprocessing_srcs, include_dirs=["Modules/_multiprocessing"]
-            )
-        )
-
     def detect_modules(self):
         self.configure_compiler()
         self.init_inc_lib_dirs()
@@ -1494,7 +1439,6 @@ class PyBuildExt(build_ext):
         self.detect_multibytecodecs()
         self.detect_decimal()
         self.detect_ctypes()
-        self.detect_multiprocessing()
 
         ##         # Uncomment these lines if you want to play with xxmodule.c
         ##         self.add(Extension('xx', ['xxmodule.c']))
