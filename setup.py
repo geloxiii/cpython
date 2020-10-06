@@ -1308,26 +1308,6 @@ class PyBuildExt(build_ext):
         else:
             self.missing.extend(['resource', 'termios'])
 
-        # Platform-specific libraries
-        if HOST_PLATFORM.startswith(('linux', 'freebsd', 'gnukfreebsd')):
-            self.add(Extension('ossaudiodev', ['ossaudiodev.c']))
-        elif not AIX:
-            self.missing.append('ossaudiodev')
-
-        if MACOS:
-            self.add(
-                Extension(
-                    '_scproxy',
-                    ['_scproxy.c'],
-                    extra_link_args=[
-                        '-framework',
-                        'SystemConfiguration',
-                        '-framework',
-                        'CoreFoundation',
-                    ],
-                )
-            )
-
     def detect_compress_exts(self):
         # Andrew Kuchling's zlib module.  Note that some versions of zlib
         # 1.1.3 have security problems.  See CERT Advisory CA-2002-07:
