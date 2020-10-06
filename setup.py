@@ -1500,134 +1500,6 @@ class PyBuildExt(build_ext):
         else:
             self.missing.append('_gdbm')
 
-    def detect_sqlite(self):
-        # The sqlite interface
-        sqlite_setup_debug = False  # verbose debug prints from this script?
-
-        # We hunt for #define SQLITE_VERSION "n.n.n"
-        sqlite_incdir = sqlite_libdir = None
-        sqlite_inc_paths = [
-            '/usr/include',
-            '/usr/include/sqlite',
-            '/usr/include/sqlite3',
-            '/usr/local/include',
-            '/usr/local/include/sqlite',
-            '/usr/local/include/sqlite3',
-        ]
-        if CROSS_COMPILING:
-            sqlite_inc_paths = []
-        # We need to find >= sqlite version 3.7.3, for sqlite3_create_function_v2()
-        MIN_SQLITE_VERSION_NUMBER = (3, 7, 3)
-        MIN_SQLITE_VERSION = ".".join([str(x) for x in MIN_SQLITE_VERSION_NUMBER])
-
-        # Scan the default include directories before the SQLite specific
-        # ones. This allows one to override the copy of sqlite on OSX,
-        # where /usr/include contains an old version of sqlite.
-        if MACOS:
-            sysroot = macosx_sdk_root()
-
-        for d_ in self.inc_dirs + sqlite_inc_paths:
-            d = d_
-            if MACOS and is_macosx_sdk_path(d):
-                d = os.path.join(sysroot, d[1:])
-
-            f = os.path.join(d, "sqlite3.h")
-            if os.path.exists(f):
-                if sqlite_setup_debug:
-                    print("sqlite: found %s" % f)
-                with open(f) as file:
-                    incf = file.read()
-                m = re.search(r'\s*.*#\s*.*define\s.*SQLITE_VERSION\W*"([\d\.]*)"', incf)
-                if m:
-                    sqlite_version = m.group(1)
-                    sqlite_version_tuple = tuple([int(x) for x in sqlite_version.split(".")])
-                    if sqlite_version_tuple >= MIN_SQLITE_VERSION_NUMBER:
-                        # we win!
-                        if sqlite_setup_debug:
-                            print("%s/sqlite3.h: version %s" % (d, sqlite_version))
-                        sqlite_incdir = d
-                        break
-                    else:
-                        if sqlite_setup_debug:
-                            print(
-                                "%s: version %s is too old, need >= %s"
-                                % (d, sqlite_version, MIN_SQLITE_VERSION)
-                            )
-                elif sqlite_setup_debug:
-                    print("sqlite: %s had no SQLITE_VERSION" % (f,))
-
-        if sqlite_incdir:
-            sqlite_dirs_to_check = [
-                os.path.join(sqlite_incdir, '..', 'lib64'),
-                os.path.join(sqlite_incdir, '..', 'lib'),
-                os.path.join(sqlite_incdir, '..', '..', 'lib64'),
-                os.path.join(sqlite_incdir, '..', '..', 'lib'),
-            ]
-            sqlite_libfile = self.compiler.find_library_file(
-                sqlite_dirs_to_check + self.lib_dirs, 'sqlite3'
-            )
-            if sqlite_libfile:
-                sqlite_libdir = [os.path.abspath(os.path.dirname(sqlite_libfile))]
-
-        if sqlite_incdir and sqlite_libdir:
-            sqlite_srcs = [
-                '_sqlite/cache.c',
-                '_sqlite/connection.c',
-                '_sqlite/cursor.c',
-                '_sqlite/microprotocols.c',
-                '_sqlite/module.c',
-                '_sqlite/prepare_protocol.c',
-                '_sqlite/row.c',
-                '_sqlite/statement.c',
-                '_sqlite/util.c',
-            ]
-
-            sqlite_defines = []
-            if not MS_WINDOWS:
-                sqlite_defines.append(('MODULE_NAME', '"sqlite3"'))
-            else:
-                sqlite_defines.append(('MODULE_NAME', '\\"sqlite3\\"'))
-
-            # Enable support for loadable extensions in the sqlite3 module
-            # if --enable-loadable-sqlite-extensions configure option is used.
-            if '--enable-loadable-sqlite-extensions' not in sysconfig.get_config_var(
-                "CONFIG_ARGS"
-            ):
-                sqlite_defines.append(("SQLITE_OMIT_LOAD_EXTENSION", "1"))
-
-            if MACOS:
-                # In every directory on the search path search for a dynamic
-                # library and then a static library, instead of first looking
-                # for dynamic libraries on the entire path.
-                # This way a statically linked custom sqlite gets picked up
-                # before the dynamic library in /usr/lib.
-                sqlite_extra_link_args = ('-Wl,-search_paths_first',)
-            else:
-                sqlite_extra_link_args = ()
-
-            include_dirs = ["Modules/_sqlite"]
-            # Only include the directory where sqlite was found if it does
-            # not already exist in set include directories, otherwise you
-            # can end up with a bad search path order.
-            if sqlite_incdir not in self.compiler.include_dirs:
-                include_dirs.append(sqlite_incdir)
-            # avoid a runtime library path for a system library dir
-            if sqlite_libdir and sqlite_libdir[0] in self.lib_dirs:
-                sqlite_libdir = None
-            self.add(
-                Extension(
-                    '_sqlite3',
-                    sqlite_srcs,
-                    define_macros=sqlite_defines,
-                    include_dirs=include_dirs,
-                    library_dirs=sqlite_libdir,
-                    extra_link_args=sqlite_extra_link_args,
-                    libraries=["sqlite3",],
-                )
-            )
-        else:
-            self.missing.append('_sqlite3')
-
     def detect_platform_specific_exts(self):
         # Unix-only modules
         if not MS_WINDOWS:
@@ -1730,87 +1602,6 @@ class PyBuildExt(build_ext):
             )
         )
 
-    def detect_expat_elementtree(self):
-        # Interface to the Expat XML parser
-        #
-        # Expat was written by James Clark and is now maintained by a group of
-        # developers on SourceForge; see www.libexpat.org for more information.
-        # The pyexpat module was written by Paul Prescod after a prototype by
-        # Jack Jansen.  The Expat source is included in Modules/expat/.  Usage
-        # of a system shared libexpat.so is possible with --with-system-expat
-        # configure option.
-        #
-        # More information on Expat can be found at www.libexpat.org.
-        #
-        if '--with-system-expat' in sysconfig.get_config_var("CONFIG_ARGS"):
-            expat_inc = []
-            define_macros = []
-            extra_compile_args = []
-            expat_lib = ['expat']
-            expat_sources = []
-            expat_depends = []
-        else:
-            expat_inc = [os.path.join(self.srcdir, 'Modules', 'expat')]
-            define_macros = [
-                ('HAVE_EXPAT_CONFIG_H', '1'),
-                # bpo-30947: Python uses best available entropy sources to
-                # call XML_SetHashSalt(), expat entropy sources are not needed
-                ('XML_POOR_ENTROPY', '1'),
-            ]
-            extra_compile_args = []
-            expat_lib = []
-            expat_sources = ['expat/xmlparse.c', 'expat/xmlrole.c', 'expat/xmltok.c']
-            expat_depends = [
-                'expat/ascii.h',
-                'expat/asciitab.h',
-                'expat/expat.h',
-                'expat/expat_config.h',
-                'expat/expat_external.h',
-                'expat/internal.h',
-                'expat/latin1tab.h',
-                'expat/utf8tab.h',
-                'expat/xmlrole.h',
-                'expat/xmltok.h',
-                'expat/xmltok_impl.h',
-            ]
-
-            cc = sysconfig.get_config_var('CC').split()[0]
-            ret = run_command(
-                '"%s" -Werror -Wno-unreachable-code -E -xc /dev/null >/dev/null 2>&1' % cc
-            )
-            if ret == 0:
-                extra_compile_args.append('-Wno-unreachable-code')
-
-        self.add(
-            Extension(
-                'pyexpat',
-                define_macros=define_macros,
-                extra_compile_args=extra_compile_args,
-                include_dirs=expat_inc,
-                libraries=expat_lib,
-                sources=['pyexpat.c'] + expat_sources,
-                depends=expat_depends,
-            )
-        )
-
-        # Fredrik Lundh's cElementTree module.  Note that this also
-        # uses expat (via the CAPI hook in pyexpat).
-
-        if os.path.isfile(os.path.join(self.srcdir, 'Modules', '_elementtree.c')):
-            define_macros.append(('USE_PYEXPAT_CAPI', None))
-            self.add(
-                Extension(
-                    '_elementtree',
-                    define_macros=define_macros,
-                    include_dirs=expat_inc,
-                    libraries=expat_lib,
-                    sources=['_elementtree.c'],
-                    depends=['pyexpat.c', *expat_sources, *expat_depends],
-                )
-            )
-        else:
-            self.missing.append('_elementtree')
-
     def detect_multibytecodecs(self):
         # Hye-Shik Chang's CJKCodecs modules.
         self.add(Extension('_multibytecodec', ['cjkcodecs/multibytecodec.c']))
@@ -1879,14 +1670,11 @@ class PyBuildExt(build_ext):
         self.detect_readline_curses()
         self.detect_crypt()
         self.detect_socket()
-        self.detect_openssl_hashlib()
         self.detect_hash_builtins()
         self.detect_dbm_gdbm()
-        self.detect_sqlite()
         self.detect_platform_specific_exts()
         self.detect_nis()
         self.detect_compress_exts()
-        self.detect_expat_elementtree()
         self.detect_multibytecodecs()
         self.detect_decimal()
         self.detect_ctypes()
@@ -2140,119 +1928,14 @@ class PyBuildExt(build_ext):
             )
         )
 
-    def detect_openssl_hashlib(self):
-        # Detect SSL support for the socket module (via _ssl)
-        config_vars = sysconfig.get_config_vars()
-
-        def split_var(name, sep):
-            # poor man's shlex, the re module is not available yet.
-            value = config_vars.get(name)
-            if not value:
-                return ()
-            # This trick works because ax_check_openssl uses --libs-only-L,
-            # --libs-only-l, and --cflags-only-I.
-            value = ' ' + value
-            sep = ' ' + sep
-            return [v.strip() for v in value.split(sep) if v.strip()]
-
-        openssl_includes = split_var('OPENSSL_INCLUDES', '-I')
-        openssl_libdirs = split_var('OPENSSL_LDFLAGS', '-L')
-        openssl_libs = split_var('OPENSSL_LIBS', '-l')
-        if not openssl_libs:
-            # libssl and libcrypto not found
-            self.missing.extend(['_ssl', '_hashlib'])
-            return None, None
-
-        # Find OpenSSL includes
-        ssl_incs = find_file('openssl/ssl.h', self.inc_dirs, openssl_includes)
-        if ssl_incs is None:
-            self.missing.extend(['_ssl', '_hashlib'])
-            return None, None
-
-        # OpenSSL 1.0.2 uses Kerberos for KRB5 ciphers
-        krb5_h = find_file('krb5.h', self.inc_dirs, ['/usr/kerberos/include'])
-        if krb5_h:
-            ssl_incs.extend(krb5_h)
-
-        if config_vars.get("HAVE_X509_VERIFY_PARAM_SET1_HOST"):
-            self.add(
-                Extension(
-                    '_ssl',
-                    ['_ssl.c'],
-                    include_dirs=openssl_includes,
-                    library_dirs=openssl_libdirs,
-                    libraries=openssl_libs,
-                    depends=['socketmodule.h', '_ssl/debughelpers.c'],
-                )
-            )
-        else:
-            self.missing.append('_ssl')
-
-        self.add(
-            Extension(
-                '_hashlib',
-                ['_hashopenssl.c'],
-                depends=['hashlib.h'],
-                include_dirs=openssl_includes,
-                library_dirs=openssl_libdirs,
-                libraries=openssl_libs,
-            )
-        )
-
     def detect_hash_builtins(self):
         # By default we always compile these even when OpenSSL is available
         # (issue #14693). It's harmless and the object code is tiny
         # (40-50 KiB per module, only loaded when actually used).  Modules can
         # be disabled via the --with-builtin-hashlib-hashes configure flag.
-        supported = {"md5", "sha1", "sha256", "sha512", "sha3", "blake2"}
+        supported = {}
 
         configured = sysconfig.get_config_var("PY_BUILTIN_HASHLIB_HASHES")
-        configured = configured.strip('"').lower()
-        configured = {m.strip() for m in configured.split(",")}
-
-        self.disabled_configure.extend(sorted(supported.difference(configured)))
-
-        if "sha256" in configured:
-            self.add(
-                Extension(
-                    '_sha256',
-                    ['sha256module.c'],
-                    extra_compile_args=['-DPy_BUILD_CORE_MODULE'],
-                    depends=['hashlib.h'],
-                )
-            )
-
-        if "sha512" in configured:
-            self.add(
-                Extension(
-                    '_sha512',
-                    ['sha512module.c'],
-                    extra_compile_args=['-DPy_BUILD_CORE_MODULE'],
-                    depends=['hashlib.h'],
-                )
-            )
-
-        if "md5" in configured:
-            self.add(Extension('_md5', ['md5module.c'], depends=['hashlib.h']))
-
-        if "sha1" in configured:
-            self.add(Extension('_sha1', ['sha1module.c'], depends=['hashlib.h']))
-
-        if "blake2" in configured:
-            blake2_deps = glob(os.path.join(escape(self.srcdir), 'Modules/_blake2/impl/*'))
-            blake2_deps.append('hashlib.h')
-            self.add(
-                Extension(
-                    '_blake2',
-                    ['_blake2/blake2module.c', '_blake2/blake2b_impl.c', '_blake2/blake2s_impl.c'],
-                    depends=blake2_deps,
-                )
-            )
-
-        if "sha3" in configured:
-            sha3_deps = glob(os.path.join(escape(self.srcdir), 'Modules/_sha3/kcp/*'))
-            sha3_deps.append('hashlib.h')
-            self.add(Extension('_sha3', ['_sha3/sha3module.c'], depends=sha3_deps))
 
     def detect_nis(self):
         if MS_WINDOWS or CYGWIN or HOST_PLATFORM == 'qnx6':
