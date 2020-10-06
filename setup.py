@@ -1826,7 +1826,7 @@ def main():
         # If you change the scripts installed here, you also need to
         # check the PyBuildScripts command above, and change the links
         # created by the bininstall target in Makefile.pre.in
-        scripts=["Tools/scripts/pydoc3", "Tools/scripts/idle3", "Tools/scripts/2to3"],
+        scripts=[],
     )
 
 

@@ -652,17 +652,6 @@ libpython$(VERSION).sl: $(LIBRARY_OBJS)
 Modules/python.exp: $(LIBRARY)
 	$(srcdir)/Modules/makexp_aix $@ "$(EXPORTSFROM)" $?
 
-# Copy up the gdb python hooks into a position where they can be automatically
-# loaded by gdb during Lib/test/test_gdb.py
-#
-# Distributors are likely to want to install this somewhere else e.g. relative
-# to the stripped DWARF data for the shared library.
-gdbhooks: $(BUILDPYTHON)-gdb.py
-
-SRC_GDB_HOOKS=$(srcdir)/Tools/gdb/libpython.py
-$(BUILDPYTHON)-gdb.py: $(SRC_GDB_HOOKS)
-	$(INSTALL_DATA) $(SRC_GDB_HOOKS) $(BUILDPYTHON)-gdb.py
-
 # This rule is here for OPENSTEP/Rhapsody/MacOSX. It builds a temporary
 # minimal framework (not including the Lib directory and such) in the current
 # directory.
