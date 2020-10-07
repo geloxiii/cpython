@@ -24,7 +24,7 @@
 
 #include <stdio.h>
 #ifndef NULL
-#   error "Python.h requires that stdio.h define NULL."
+#error "Python.h requires that stdio.h define NULL."
 #endif
 
 #include <string.h>
@@ -38,14 +38,14 @@
 #ifdef HAVE_CRYPT_H
 #if defined(HAVE_CRYPT_R) && !defined(_GNU_SOURCE)
 /* Required for glibc to expose the crypt_r() function prototype. */
-#  define _GNU_SOURCE
-#  define _Py_GNU_SOURCE_FOR_CRYPT
+#define _GNU_SOURCE
+#define _Py_GNU_SOURCE_FOR_CRYPT
 #endif
 #include <crypt.h>
 #ifdef _Py_GNU_SOURCE_FOR_CRYPT
 /* Don't leak the _GNU_SOURCE define to other headers. */
-#  undef _GNU_SOURCE
-#  undef _Py_GNU_SOURCE_FOR_CRYPT
+#undef _GNU_SOURCE
+#undef _Py_GNU_SOURCE_FOR_CRYPT
 #endif
 #endif
 
@@ -65,11 +65,11 @@
 
 /* A convenient way for code to know if clang's memory sanitizer is enabled. */
 #if defined(__has_feature)
-#  if __has_feature(memory_sanitizer)
-#    if !defined(_Py_MEMORY_SANITIZER)
-#      define _Py_MEMORY_SANITIZER
-#    endif
-#  endif
+#if __has_feature(memory_sanitizer)
+#if !defined(_Py_MEMORY_SANITIZER)
+#define _Py_MEMORY_SANITIZER
+#endif
+#endif
 #endif
 
 /* Debug-mode build with pymalloc implies PYMALLOC_DEBUG.
@@ -127,7 +127,6 @@
 #include "weakrefobject.h"
 #include "structseq.h"
 #include "namespaceobject.h"
-#include "picklebufobject.h"
 
 #include "codecs.h"
 #include "pyerrors.h"

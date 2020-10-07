@@ -423,7 +423,6 @@ OBJECT_OBJS=	\
 		Objects/namespaceobject.o \
 		Objects/object.o \
 		Objects/obmalloc.o \
-		Objects/picklebufobject.o \
 		Objects/rangeobject.o \
 		Objects/setobject.o \
 		Objects/sliceobject.o \
@@ -1013,11 +1012,9 @@ PYTHON_HEADERS= \
 		$(srcdir)/Include/osdefs.h \
 		$(srcdir)/Include/osmodule.h \
 		$(srcdir)/Include/patchlevel.h \
-		$(srcdir)/Include/picklebufobject.h \
 		$(srcdir)/Include/pyarena.h \
 		$(srcdir)/Include/pycapsule.h \
 		$(srcdir)/Include/pyctype.h \
-		$(srcdir)/Include/pydebug.h \
 		$(srcdir)/Include/pydtrace.h \
 		$(srcdir)/Include/pyerrors.h \
 		$(srcdir)/Include/pyfpe.h \

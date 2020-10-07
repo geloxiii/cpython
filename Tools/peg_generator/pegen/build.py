@@ -1,11 +1,10 @@
+import itertools
 import pathlib
 import shutil
-import tokenize
 import sysconfig
 import tempfile
-import itertools
-
-from typing import Optional, Tuple, List, IO, Set, Dict
+import tokenize
+from typing import IO, Dict, List, Optional, Set, Tuple
 
 from pegen.c_generator import CParserGenerator
 from pegen.grammar import Grammar
@@ -44,59 +43,8 @@ def compile_c_extension(
     If *build_dir* is provided, that path will be used as the temporary build directory
     of distutils (this is useful in case you want to use a temporary directory).
     """
-    import distutils.log
-    from distutils.core import Distribution, Extension
-    from distutils.command.clean import clean  # type: ignore
-    from distutils.command.build_ext import build_ext  # type: ignore
-    from distutils.tests.support import fixup_build_ext  # type: ignore
 
-    if verbose:
-        distutils.log.set_verbosity(distutils.log.DEBUG)
-
-    source_file_path = pathlib.Path(generated_source_path)
-    extension_name = source_file_path.stem
-    extra_compile_args = get_extra_flags("CFLAGS", "PY_CFLAGS_NODIST")
-    extra_link_args = get_extra_flags("LDFLAGS", "PY_LDFLAGS_NODIST")
-    if keep_asserts:
-        extra_compile_args.append("-UNDEBUG")
-    extension = [
-        Extension(
-            extension_name,
-            sources=[
-                str(MOD_DIR.parent.parent.parent / "Python" / "Python-ast.c"),
-                str(MOD_DIR.parent.parent.parent / "Python" / "asdl.c"),
-                str(MOD_DIR.parent.parent.parent / "Parser" / "tokenizer.c"),
-                str(MOD_DIR.parent.parent.parent / "Parser" / "pegen.c"),
-                str(MOD_DIR.parent.parent.parent / "Parser" / "string_parser.c"),
-                str(MOD_DIR.parent / "peg_extension" / "peg_extension.c"),
-                generated_source_path,
-            ],
-            include_dirs=[
-                str(MOD_DIR.parent.parent.parent / "Include" / "internal"),
-                str(MOD_DIR.parent.parent.parent / "Parser"),
-            ],
-            extra_compile_args=extra_compile_args,
-            extra_link_args=extra_link_args,
-        )
-    ]
-    dist = Distribution({"name": extension_name, "ext_modules": extension})
-    cmd = build_ext(dist)
-    fixup_build_ext(cmd)
-    cmd.inplace = True
-    if build_dir:
-        cmd.build_temp = build_dir
-        cmd.build_lib = build_dir
-    cmd.ensure_finalized()
-    cmd.run()
-
-    extension_path = source_file_path.parent / cmd.get_ext_filename(extension_name)
-    shutil.move(cmd.get_ext_fullpath(extension_name), extension_path)
-
-    cmd = clean(dist)
-    cmd.finalize_options()
-    cmd.run()
-
-    return extension_path
+    return "/tmp/none"
 
 
 def build_parser(
