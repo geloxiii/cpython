@@ -49,7 +49,6 @@ Python/importlib_external.h linguist-generated=true
 Include/Python-ast.h        linguist-generated=true
 Python/Python-ast.c         linguist-generated=true
 Include/opcode.h            linguist-generated=true
-Python/opcode_targets.h     linguist-generated=true
 Objects/typeslots.inc       linguist-generated=true
 *_db.h                      linguist-generated=true
 Doc/library/token-list.inc  linguist-generated=true

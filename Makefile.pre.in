@@ -892,15 +892,8 @@ Objects/odictobject.o: $(srcdir)/Objects/dict-common.h
 Objects/dictobject.o: $(srcdir)/Objects/stringlib/eq.h $(srcdir)/Objects/dict-common.h
 Objects/setobject.o: $(srcdir)/Objects/stringlib/eq.h
 
-.PHONY: regen-opcode-targets
-regen-opcode-targets:
-	# Regenerate Python/opcode_targets.h from Lib/opcode.py
-	# using Python/makeopcodetargets.py
-	$(PYTHON_FOR_REGEN) $(srcdir)/Python/makeopcodetargets.py \
-		$(srcdir)/Python/opcode_targets.h.new
-	$(UPDATE_FILE) $(srcdir)/Python/opcode_targets.h $(srcdir)/Python/opcode_targets.h.new
 
-Python/ceval.o: $(srcdir)/Python/opcode_targets.h $(srcdir)/Python/ceval_gil.h \
+Python/ceval.o: $(srcdir)/Python/ceval_gil.h \
 		$(srcdir)/Python/condvar.h
 
 Python/frozen.o: $(srcdir)/Python/importlib.h $(srcdir)/Python/importlib_external.h \
